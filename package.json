@@ -1,8 +1,8 @@
 ﻿{
   "name": "com.gameshalico.time-space",
   "displayName": "Time Space",
-  "description": "Time Space is a simple plugin that allows you to easily create a time scope for your game.",
-  "version": "1.0.0",
+  "description": "Time Space is a simple framework for managing timescales hierarchically",
+  "version": "0.1.0",
   "author": {
     "name": "Gameshalico",
     "email": "contact@gameshalico.com",
