@@ -1,0 +1,13 @@
+﻿{
+  "name": "TimeSpace.Editor.Tests",
+  "references": [
+    "TimeSpace"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
