@@ -9,7 +9,12 @@ namespace TimeSpace
         private readonly ReactiveProperty<float> _elapsedTimeReactiveProperty;
         private readonly List<TriggerEvent> _triggerEvents = new();
 
-        public ReactiveTimeCounter(float elapsedTime = 0)
+        public ReactiveTimeCounter()
+        {
+            _elapsedTimeReactiveProperty = new ReactiveProperty<float>(0);
+        }
+
+        public ReactiveTimeCounter(float elapsedTime)
         {
             _elapsedTimeReactiveProperty = new ReactiveProperty<float>(elapsedTime);
         }
@@ -47,10 +52,7 @@ namespace TimeSpace
             return _elapsedTimeReactiveProperty
                 .Where(x => x >= triggerTime)
                 .Take(1)
-                .Subscribe(_ =>
-                {
-                    onTrigger?.Invoke();
-                });
+                .Subscribe(_ => { onTrigger?.Invoke(); });
         }
 
         public IDisposable TriggerAt(float triggerTime, Action onTrigger)

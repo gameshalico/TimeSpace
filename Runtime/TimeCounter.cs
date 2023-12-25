@@ -2,7 +2,12 @@
 {
     public class TimeCounter : ITimeCounter
     {
-        public TimeCounter(float elapsedTime = 0f)
+        public TimeCounter()
+        {
+            ElapsedTime = 0f;
+        }
+
+        public TimeCounter(float elapsedTime)
         {
             ElapsedTime = elapsedTime;
         }
