@@ -30,13 +30,35 @@ namespace TimeSpace
             }
         }
 
-        public static async void DelayedCall(this IDeltaTimeSource self, float duration, Action action,
+        public static async void DelayedCall(this IDeltaTimeSource self, float duration,
+            Action onComplete = null, Action onCanceled = null, Action onFinally = null,
+            PlayerLoopTiming playerLoopTiming = PlayerLoopTiming.Update,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await self.Delay(duration, playerLoopTiming, cancellationToken);
+                onComplete?.Invoke();
+            }
+            catch (OperationCanceledException)
+            {
+                onCanceled?.Invoke();
+            }
+            finally
+            {
+                onFinally?.Invoke();
+            }
+        }
+
+        public static async void DelayedCall(this IDeltaTimeSource self, float duration,
+            Action onComplete,
             PlayerLoopTiming playerLoopTiming = PlayerLoopTiming.Update,
             CancellationToken cancellationToken = default)
         {
             await self.Delay(duration, playerLoopTiming, cancellationToken);
-            action();
+            onComplete?.Invoke();
         }
+
 
         public static async IAsyncEnumerable<float> LinearAsyncEnumerable(this IDeltaTimeSource self, float duration,
             PlayerLoopTiming playerLoopTiming = PlayerLoopTiming.Update,
