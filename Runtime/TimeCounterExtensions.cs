@@ -12,5 +12,16 @@ namespace TimeSpace
             while (self.ElapsedTime < duration)
                 await UniTask.Yield(playerLoopTiming, cancellationToken);
         }
+
+        public static async UniTask Run(this ITimeCounter self, IDeltaTimeSource deltaTimeSource,
+            PlayerLoopTiming playerLoopTiming = PlayerLoopTiming.Update,
+            CancellationToken cancellationToken = default)
+        {
+            while (true)
+            {
+                self.Update(deltaTimeSource.DeltaTimeFor(playerLoopTiming));
+                await UniTask.Yield(playerLoopTiming, cancellationToken);
+            }
+        }
     }
 }
