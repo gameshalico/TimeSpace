@@ -1,10 +1,16 @@
-﻿namespace TimeSpace
+﻿using System;
+
+namespace TimeSpace
 {
     public class ReactiveTimer : Timer<ReactiveTimeCounter>
     {
-        public IScheduledEvent StopAt(float triggerTime)
+        public IScheduledEvent StopAt(float triggerTime, Action onStop = null)
         {
-            return TimeCounter.TriggerAt(triggerTime, Stop);
+            return TimeCounter.TriggerAt(triggerTime, () =>
+            {
+                onStop?.Invoke();
+                Stop();
+            });
         }
     }
 }
