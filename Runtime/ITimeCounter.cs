@@ -2,8 +2,8 @@
 {
     public interface ITimeCounter
     {
-        public float ElapsedTime { get; }
-        public void Reset(float accumulatedTime = 0f);
-        public void Update(float deltaTime);
+        public float ElapsedTime { get; set; }
+        public void Reset(float elapsedTime = 0f);
+        public void IncrementTimer(float deltaTime);
     }
 }

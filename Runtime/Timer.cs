@@ -1,36 +1,45 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace TimeSpace
 {
-    public class Timer<TTimeCounter> where TTimeCounter : ITimeCounter, new()
+    public class Timer<TTimeCounter> : IDisposable where TTimeCounter : ITimeCounter, new()
     {
-        private readonly IDeltaTimeSource _source;
-        private readonly PlayerLoopTiming _timing;
         private TTimeCounter _timeCounter;
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource _cancellationTokenSource;
 
-        public Timer(IDeltaTimeSource source, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        public Timer()
         {
             _timeCounter = new TTimeCounter();
-            _source = source;
-            _timing = timing;
         }
+
+        public bool IsRunning { get; private set; }
 
         public TTimeCounter TimeCounter => _timeCounter;
 
         public float ElapsedTime => _timeCounter.ElapsedTime;
 
-        public void Start()
+        public void Dispose()
         {
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
-            _timeCounter.Run(_source, _timing, _cts.Token).Forget();
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+        }
+
+        public void Start(IDeltaTimeSource source, PlayerLoopTiming timing = PlayerLoopTiming.Update,
+            CancellationToken cancellationToken = default)
+        {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            IsRunning = true;
+            _cancellationTokenSource.Token.Register(() => IsRunning = false);
+
+            _timeCounter.Run(source, timing, _cancellationTokenSource.Token).Forget();
         }
 
         public void Stop()
         {
-            _cts?.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
     }
 }

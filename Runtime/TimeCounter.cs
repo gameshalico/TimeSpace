@@ -12,14 +12,14 @@
             ElapsedTime = elapsedTime;
         }
 
-        public float ElapsedTime { get; private set; }
+        public float ElapsedTime { get; set; }
 
-        public void Reset(float accumulatedTime = 0f)
+        public void Reset(float elapsedTime = 0f)
         {
-            ElapsedTime = accumulatedTime;
+            ElapsedTime = elapsedTime;
         }
 
-        public void Update(float deltaTime)
+        public void IncrementTimer(float deltaTime)
         {
             ElapsedTime += deltaTime;
         }

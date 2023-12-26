@@ -19,19 +19,8 @@ namespace Tests.Editor
         public void ShouldUpdateElapsedTimeCorrectly()
         {
             var timeCounter = new ReactiveTimeCounter();
-            timeCounter.Update(DeltaTime);
+            timeCounter.IncrementTimer(DeltaTime);
             Assert.That(timeCounter.ElapsedTime, Is.EqualTo(DeltaTime));
-        }
-
-        [Test]
-        public void TriggerAtOnce_ShouldTriggerEventOnceAfterSpecifiedTime()
-        {
-            var timeCounter = new ReactiveTimeCounter();
-            var triggered = false;
-            timeCounter.TriggerAtOnce(1f, () => triggered = true);
-            while (timeCounter.ElapsedTime < 1f)
-                timeCounter.Update(DeltaTime);
-            Assert.That(triggered, Is.True);
         }
 
         [Test]
@@ -41,7 +30,7 @@ namespace Tests.Editor
             var triggered = false;
             timeCounter.TriggerAt(1f, () => triggered = true);
             while (timeCounter.ElapsedTime < 1f)
-                timeCounter.Update(DeltaTime);
+                timeCounter.IncrementTimer(DeltaTime);
             Assert.That(triggered, Is.True);
 
             triggered = false;
@@ -49,7 +38,7 @@ namespace Tests.Editor
 
             Assert.That(triggered, Is.False);
             while (timeCounter.ElapsedTime < 1f)
-                timeCounter.Update(DeltaTime);
+                timeCounter.IncrementTimer(DeltaTime);
             Assert.That(triggered, Is.True);
         }
 
@@ -63,7 +52,7 @@ namespace Tests.Editor
             timeCounter.Reset();
 
             while (timeCounter.ElapsedTime < 1f)
-                timeCounter.Update(DeltaTime);
+                timeCounter.IncrementTimer(DeltaTime);
 
             Assert.That(triggered, Is.True);
         }
@@ -76,7 +65,7 @@ namespace Tests.Editor
             timeCounter.ResetAt(1f, () => triggered = true);
             Assert.That(triggered, Is.False);
             while (!triggered)
-                timeCounter.Update(DeltaTime);
+                timeCounter.IncrementTimer(DeltaTime);
             Assert.That(triggered, Is.True);
             Assert.That(timeCounter.ElapsedTime, Is.LessThan(1f));
         }

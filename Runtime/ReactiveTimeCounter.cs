@@ -7,7 +7,7 @@ namespace TimeSpace
     public class ReactiveTimeCounter : ITimeCounter
     {
         private readonly ReactiveProperty<float> _elapsedTimeReactiveProperty;
-        private readonly List<TriggerEvent> _triggerEvents = new();
+        private readonly List<ScheduledEvent> _triggerEvents = new();
 
         public ReactiveTimeCounter()
         {
@@ -21,33 +21,42 @@ namespace TimeSpace
 
         public IReadOnlyReactiveProperty<float> ElapsedTimeReactiveProperty => _elapsedTimeReactiveProperty;
 
-        public float ElapsedTime => _elapsedTimeReactiveProperty.Value;
-
-        public void Reset(float accumulatedTime = 0)
+        public float ElapsedTime
         {
-            _elapsedTimeReactiveProperty.Value = accumulatedTime;
+            get => _elapsedTimeReactiveProperty.Value;
+            set => _elapsedTimeReactiveProperty.Value = value;
+        }
+
+        public void Reset(float elapsedTime = 0)
+        {
+            _elapsedTimeReactiveProperty.Value = elapsedTime;
 
             foreach (var triggerEvent in _triggerEvents)
                 triggerEvent.Resubscribe();
         }
 
-        public void Update(float deltaTime)
+        public void IncrementTimer(float deltaTime)
         {
             _elapsedTimeReactiveProperty.Value += deltaTime;
         }
 
-        public IDisposable ResetAt(float limitTime, Action onReset = null)
+        public IScheduledEvent ResetAt(float limitTime, Action onReset = null)
         {
-            return _elapsedTimeReactiveProperty
-                .Where(x => x >= limitTime)
-                .Subscribe(_ =>
-                {
-                    onReset?.Invoke();
-                    Reset(_elapsedTimeReactiveProperty.Value - limitTime);
-                });
+            return TriggerAt(limitTime, () =>
+            {
+                onReset?.Invoke();
+                Reset(ElapsedTime - limitTime);
+            });
         }
 
-        public IDisposable TriggerAtOnce(float triggerTime, Action onTrigger)
+        public IScheduledEvent TriggerAt(float triggerTime, Action onTrigger)
+        {
+            var triggerEvent = new ScheduledEvent(this, triggerTime, onTrigger);
+            triggerEvent.Register();
+            return triggerEvent;
+        }
+
+        private IDisposable TriggerAtOnce(float triggerTime, Action onTrigger)
         {
             return _elapsedTimeReactiveProperty
                 .Where(x => x >= triggerTime)
@@ -55,38 +64,63 @@ namespace TimeSpace
                 .Subscribe(_ => { onTrigger?.Invoke(); });
         }
 
-        public IDisposable TriggerAt(float triggerTime, Action onTrigger)
+        private class ScheduledEvent : IScheduledEvent
         {
-            var triggerEvent = new TriggerEvent(this, triggerTime, onTrigger);
-            _triggerEvents.Add(triggerEvent);
-            triggerEvent.Resubscribe();
-            return triggerEvent;
-        }
-
-        private class TriggerEvent : IDisposable
-        {
-            private readonly Action _onTrigger;
-            private readonly ReactiveTimeCounter _reactiveTimeCounter;
-            private readonly float _triggerTime;
+            private Action _onTrigger;
+            private float _triggerTime;
             private IDisposable _currentSubscription;
 
-            public TriggerEvent(ReactiveTimeCounter reactiveTimeCounter, float triggerTime, Action onTrigger)
+            public ScheduledEvent(ReactiveTimeCounter reactiveTimeCounter, float triggerTime, Action onTrigger)
             {
-                _reactiveTimeCounter = reactiveTimeCounter;
+                TimeCounter = reactiveTimeCounter;
                 _triggerTime = triggerTime;
                 _onTrigger = onTrigger;
+            }
+
+            public ReactiveTimeCounter TimeCounter { get; }
+            public bool IsTriggered { get; private set; }
+
+            public Action OnTrigger
+            {
+                get => _onTrigger;
+                set
+                {
+                    _onTrigger = value;
+                    if (!IsTriggered) Resubscribe();
+                }
+            }
+
+            public float TriggerTime
+            {
+                get => _triggerTime;
+                set
+                {
+                    _triggerTime = value;
+                    if (!IsTriggered) Resubscribe();
+                }
             }
 
             public void Dispose()
             {
                 _currentSubscription?.Dispose();
-                _reactiveTimeCounter._triggerEvents.Remove(this);
+                TimeCounter._triggerEvents.Remove(this);
             }
 
             public void Resubscribe()
             {
+                IsTriggered = false;
                 _currentSubscription?.Dispose();
-                _currentSubscription = _reactiveTimeCounter.TriggerAtOnce(_triggerTime, _onTrigger);
+                _currentSubscription = TimeCounter.TriggerAtOnce(_triggerTime, () =>
+                {
+                    IsTriggered = true;
+                    _onTrigger?.Invoke();
+                });
+            }
+
+            public void Register()
+            {
+                TimeCounter._triggerEvents.Add(this);
+                Resubscribe();
             }
         }
     }

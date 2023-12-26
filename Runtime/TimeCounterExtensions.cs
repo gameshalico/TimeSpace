@@ -19,7 +19,7 @@ namespace TimeSpace
         {
             while (true)
             {
-                self.Update(deltaTimeSource.DeltaTimeFor(playerLoopTiming));
+                self.IncrementTimer(deltaTimeSource.DeltaTimeFor(playerLoopTiming));
                 await UniTask.Yield(playerLoopTiming, cancellationToken);
             }
         }
